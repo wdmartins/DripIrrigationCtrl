@@ -3,3 +3,10 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch/*
+# Soft links needed under lib from ESP8266Libraries (https://github.com/wdmartins/ESP8266Libraries)
+lib/FlowMeter
+lib/Valves
+lib/PushButton
+lib/TimeUtils
+lib/StatusLED
+lib/LongTicker
