@@ -44,3 +44,11 @@ libraries scanning project source files.
 
 More information about PlatformIO Library Dependency Finder
 - https://docs.platformio.org/page/librarymanager/ldf.html
+
+The following libraries from (https://github.com/wdmartins/ESP8266Libraries) are required here:
+FlowMeter
+Valves
+PushButton
+TimeUtils
+StatusLED
+LongTicker
