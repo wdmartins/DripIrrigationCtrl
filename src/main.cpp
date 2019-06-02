@@ -53,17 +53,23 @@ const int LCD_DISPLAY_INTERVAL_SECONDS = 60;    // Update the LCD display
 /*------------------------------------------------------------------------------------*/
 /* GPIO Definitions                                                                   */
 /*------------------------------------------------------------------------------------*/
-const int GPIO_FLOW_METER_SIGNAL = 16; // ESP8266 NodeMCU D0 (INPUT)
-const int GPIO_DISPLAY_SCL = 5;        // ESP8266 NodeMCU D1 (SCL)
-const int GPIO_DISPLAY_SDA = 4;        // ESP8266 NodeMCU D2 (SDA) 
 const int GPIO_VALVE_ENABLE = 0;       // ESP8266 NodeMCU D3 (OUTPUT)
+const int GPIO_UNUSED_01 = 2;          // ESP8266 NodeMUC D4 (UART)
 const int GPIO_UNUSED_02 = 2;          // ESP8266 NodeMUC D4 (Boot mode. Do not user for INPUT)
-const int GPIO_STATUS_LED = 14;        // ESP8266 NodeMCU D5 (OUTPUT)
+const int GPIO_UNUSED_03 = 3;          // ESP8266 NodeMCU D9 (UART)
+const int GPIO_DISPLAY_SDA = 4;        // ESP8266 NodeMCU D2 (SDA) 
+const int GPIO_DISPLAY_SCL = 5;        // ESP8266 NodeMCU D1 (SCL)
+const int GPIO_UNUSED_06 = 6;          // ESP8266 NodeMCU -+ F M
+const int GPIO_UNUSED_07 = 7;          // ESP8266 NodeMCU  + L E
+const int GPIO_UNUSED_08 = 8;          // ESP8266 NodeMCU  + A M
+const int GPIO_UNUSED_09 = 9;          // ESP8266 NodeMCU  + S O
+const int GPIO_UNUSED_10 = 10;         // ESP8266 NodeMCU  + H R
+const int GPIO_UNUSED_11 = 11;         // ESP8266 NodeMCU -+   Y
 const int GPIO_VALVE_SIGNAL = 12;      // ESP8266 NodeMCU D6 (OUTPUT)
-const int GPIO_PUSH_BUTTON = 13;       // ESP8266 NodeMUC D7 (INPUT
+const int GPIO_FLOW_METER_SIGNAL = 13; // ESP8266 NodeMUC D7 (INPUT
+const int GPIO_STATUS_LED = 14;        // ESP8266 NodeMCU D5 (OUTPUT)
 const int GPIO_UNUSED_15 = 15;         // ESP8266 NodeMCU D8 (Boot from SD Card)
-const int GPIO_UNUSED_10 = 10;         // ESP8266 NodeMCU SD2
-const int GPIO_UNUSED_09 = 9;          // ESP8266 NodeMCU SD3
+const int GPIO_PUSH_BUTTON = 16;       // ESP8266 NodeMCU D0 (INPUT)
 /*------------------------------------------------------------------------------------*/
 /* Helper Classes                                                                     */
 /*------------------------------------------------------------------------------------*/
