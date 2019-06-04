@@ -278,7 +278,7 @@ void reportFlow() {
 void updateLcd(bool noTimeDisplay) {
   char aux[50];
   time_t now = TimeUtils::getCurrentTimeRaw();
-  Serial.printf("[DEBUG]: toDisplay: %d\n", toDisplay);
+  Serial.printf("[DEBUG]: toDisplay: %ld\n", toDisplay);
   int remaining = toDisplay - now;
   int minutes = remaining / 60;
   int hours = 0;
@@ -408,7 +408,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   bool noTimeDisplay = false;
   Serial.printf("[MQTT]: Message arrived [%s]\n", topic);
   Serial.print("[MQTT]: Payload (");
-  for (int i=0;i<length;i++) {
+  for (unsigned int i=0; i < length; i++) {
     Serial.print((char)payload[i]);
   }
   Serial.println(")");
@@ -416,11 +416,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
   int rainDelay;
   switch((char) payload[0]) {
     case MQTT_CMD_CONFIG_DRIP: // Configutation in the format of HH:MM:SSMMHH where HH:MM:SS is start time, MM duration, and HH period
-      sprintf(aux, "%c%c\0", payload[9], payload[10]);
+      sprintf(aux, "%c%c", payload[9], payload[10]);
       dripParams.setDripTimeMinutes(atoi(aux));
-      sprintf(aux, "%c%c\0", payload[11], payload[12]);
+      sprintf(aux, "%c%c", payload[11], payload[12]);
       dripParams.setDripPeriodHours(atoi(aux));
-      sprintf(aux,"%c%c:%c%c:%c%c\0", payload[1], payload[2], payload[4], payload[5], payload[7], payload[8]);
+      sprintf(aux,"%c%c:%c%c:%c%c", payload[1], payload[2], payload[4], payload[5], payload[7], payload[8]);
       dripParams.setStartDripTime(aux);
       Serial.printf("[DRIPCTRL]: New Drip Configuration: StartTime(%s), Duration(%d minutes), Period(%d hours)\n", 
         aux, dripParams.getDripTimeMinutes(), dripParams.getDripPeriodHours());
@@ -432,7 +432,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       dripParams.saveToEEPROM();
       break;
     case MQTT_CMD_RAIN_DELAY: // Rain delay in the format of HH which is hours to not drip
-      sprintf(aux, "%c%c\0", payload[1], (length <= 2 ? 0 : payload[2]));
+      sprintf(aux, "%c%c", payload[1], (length <= 2 ? 0 : payload[2]));
       rainDelay = atoi(aux);
       if (rainDelay > 0) {
         dripParams.setRainDelay(atoi(aux));
@@ -450,7 +450,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       }
       break;
     case MQTT_CMD_START_DRIP: // Start dripping in the format of MM which is the drip time in minutes
-      sprintf(aux, "%c%c\0", payload[1], payload[2]);
+      sprintf(aux, "%c%c", payload[1], payload[2]);
       Serial.printf("[DRIPCTRL]: Start manual dripping for %s minutes\n", aux);
       if (solenoidValve.isValveOpen()) {
         Serial.println("[DRIPCTRL]: Already dripping. Ignore Command");
@@ -484,7 +484,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       delay(5);
       ESP.reset();
       break;
-    defaul: 
+    default: 
       Serial.printf("[MQTT]: Unknown MQTT Command: %c\n", (char) payload[0]);
       break;
   }
@@ -505,7 +505,7 @@ void reconnect() {
       // ... and resubscribe
       mqttClient.subscribe(MQTT_IN_TOPIC);
     } else {
-      Serial.printf("[MQTT]: Failed, rc= %s, try again in 5 seconds\n", mqttClient.state());
+      Serial.printf("[MQTT]: Failed, rc= %d, try again in 5 seconds\n", mqttClient.state());
       // Visual Indication
       sprintf(lcdLine, "MQTT Error: %d",mqttClient.state());
       updateLcd(true);
