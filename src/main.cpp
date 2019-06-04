@@ -258,6 +258,12 @@ time_t toDisplay;
 /*------------------------------------------------------------------------------------*/
 // WiFiManager Configuration CallBack
 void configModeCallback (WiFiManager *myWiFiManager) {
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Config WiFi");
+  lcd.setCursor(0,1);
+  lcd.print(WiFi.softAPIP());
+  statusLed.setStatus(ANY_ERROR);
   Serial.println("[WIFI]: Entered config mode");
   Serial.print("[WIFI]:"); Serial.println(WiFi.softAPIP());
   Serial.printf("[WIFI]: %s", (myWiFiManager->getConfigPortalSSID()).c_str());
@@ -561,7 +567,8 @@ void onPushButtonLongPressed() {
   Serial.println("[DRIPCTRL]: Button Pressed on Start. Reseting...");
   sprintf(lcdLine, "Resetting");
   updateLcd(true);
-  delay(5);
+  wifiManager.resetSettings();
+  delay(10);
   ESP.reset();
 }
 
@@ -582,6 +589,7 @@ void setup() {
   pushButton.setup(onPushButtonPressedOnStart, onPushButtonVeryShortlyPressed, onPushButtonShortlyPressed, onPushButtonLongPressed);
   
   // Instantiate and setup WiFiManager
+  // wifiManager.resetSettings(); Uncomment to reset wifi settings
   wifiManager.setAPCallback(configModeCallback);
   if (!wifiManager.autoConnect(ACCESS_POINT_NAME, ACCESS_POINT_PASS)) {
     Serial.println("Failed to connect and hit timeout");
