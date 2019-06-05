@@ -528,7 +528,7 @@ void reconnect() {
 void onPushButtonPressedOnStart() {
   Serial.println("[DRIPCTRL]: Button Pressed on Start. Delete Wi-Fi credentials and reset");
   wifiManager.resetSettings();
-  delay(5);
+  delay(10);
   ESP.reset();
 }
 void onPushButtonVeryShortlyPressed() {
@@ -567,7 +567,6 @@ void onPushButtonLongPressed() {
   Serial.println("[DRIPCTRL]: Button Pressed on Start. Reseting...");
   sprintf(lcdLine, "Resetting");
   updateLcd(true);
-  wifiManager.resetSettings();
   delay(10);
   ESP.reset();
 }
