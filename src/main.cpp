@@ -391,7 +391,7 @@ void scheduleDrip() {
     solenoidValve.openValve();
     mqttClient.publish(MQTT_DRIP_STARTED, "");
     dripTicker.once((dripTimeSeconds / 60) + 1, stopScheduledDrip);
-    sprintf(lcdLine, "Dripping...");
+    sprintf(lcdLine, "Dripping");
   } else if (rescheduleTimeMinutes > 0) {
     // #3 Too late for dripping today, or rain delay. Schedule to re-schedule
     dripTicker.once(rescheduleTimeMinutes + 1, scheduleDrip);
