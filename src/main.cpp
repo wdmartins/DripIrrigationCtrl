@@ -75,9 +75,9 @@ const uint8_t GPIO_PUSH_BUTTON = 16;       // ESP8266 NodeMCU D0 (INPUT)
 /*------------------------------------------------------------------------------------*/
 class DripParams {
   public:
-    DripParams(const char *startDripTime, int dripPeriod, int dripTime):
-    _period(dripPeriod),
-    _duration(dripTime) {
+    DripParams(const char *startDripTime, uint8_t dripPeriodHours, uint8_t dripTimeMinutes):
+    _period(dripPeriodHours),
+    _duration(dripTimeMinutes) {
       strcpy(_startTime, startDripTime);
       strptime(startDripTime, "%T", &_start);
       _rainDelayHours = 0;
@@ -97,19 +97,19 @@ class DripParams {
       return mktime(currentTime); 
     }
 
-    int getDripPeriodSeconds(void) {
+    uint32_t getDripPeriodSeconds(void) {
         return _period * 3600;
     }
 
-    int getDripTimeSeconds(void) {
+    uint16_t getDripTimeSeconds(void) {
       return _duration * 60;
     }
 
-    int getDripTimeMinutes(void) {
+    uint8_t getDripTimeMinutes(void) {
       return _duration;
     }
 
-    int getDripPeriodHours(void) {
+    uint8_t getDripPeriodHours(void) {
       return _period;
     }
     
@@ -119,15 +119,15 @@ class DripParams {
         strptime(startTime, "%T", &_start);
     }
 
-    void setDripPeriodHours(int hours) {
+    void setDripPeriodHours(uint8_t hours) {
       _period = hours;
     }
 
-    void setDripTimeMinutes(int minutes) {
+    void setDripTimeMinutes(uint8_t minutes) {
       _duration = minutes;
     }
 
-    void setRainDelay(int hours) {
+    void setRainDelay(uint8_t hours) {
       _rainDelayHours = hours;
       _rainDelayResumeTime = TimeUtils::getCurrentTimeRaw() + hours * 3600; 
     }
@@ -161,7 +161,7 @@ class DripParams {
       // Byte 4: Drip Period 0,6,12,24
       // Byte 5: Dripping Duration Minutes 0-255
       // Rain delay will not be save and will not survive reboot.
-      int addr = 0;
+      uint8_t addr = 0;
       EEPROM.write(addr, 0x00); addr++;
       EEPROM.write(addr, _start.tm_hour); addr++;
       EEPROM.write(addr, _start.tm_min); addr++;
@@ -173,19 +173,19 @@ class DripParams {
     }
     void restoreFromEEPROM() {
       Serial.println("[DRIPCTR]: Restoring Scheduling Data from EEPROM");
-      int addr = 0;
+      uint8_t addr = 0;
       byte value = EEPROM.read(addr); addr++;
       if (value == 0x00) {
         // Valid data on EEPROM
-        int hour = EEPROM.read(addr); addr++;
-        int min = EEPROM.read(addr); addr++;
-        int sec = EEPROM.read(addr); addr++;
-        int period = EEPROM.read(addr); addr++;
-        int duration = EEPROM.read(addr);
+        uint8_t hour = EEPROM.read(addr); addr++;
+        uint8_t min = EEPROM.read(addr); addr++;
+        uint8_t sec = EEPROM.read(addr); addr++;
+        uint8_t period = EEPROM.read(addr); addr++;
+        uint8_t duration = EEPROM.read(addr);
         // Validate values
         if (hour >= 0 && hour <= 23 && min >= 0 && min <= 59 && sec >= 0 && sec <= 59) {
           // Valid start time
-          sprintf(_startTime, "%02d:%02d:%02d", hour, min, sec);
+          sprintf(_startTime, "%02u:%02u:%02u", hour, min, sec);
           _start.tm_hour = hour;
           _start.tm_min = min;
           _start.tm_sec = sec;
@@ -210,9 +210,9 @@ class DripParams {
     char _auxBuffer[200];
     char _startTime[100];
     struct tm _start;
-    int _period;
-    int _duration;
-    int _rainDelayHours;
+    uint8_t _period;
+    uint8_t _duration;
+    uint8_t _rainDelayHours;
     time_t _rainDelayResumeTime;
 };
 
@@ -285,9 +285,9 @@ void updateLcd(bool noTimeDisplay) {
   char aux[50];
   time_t now = TimeUtils::getCurrentTimeRaw();
   Serial.printf("[DEBUG]: toDisplay: %ld\n", toDisplay);
-  int remaining = toDisplay - now;
-  int minutes = remaining / 60;
-  int hours = 0;
+  uint32_t remaining = toDisplay - now;
+  uint16_t minutes = remaining / 60;
+  uint8_t hours = 0;
   Serial.printf("[DEBUG]: remaining: %d\n", remaining);
   if (minutes > 59) {
      hours = minutes / 60;
@@ -318,7 +318,7 @@ void startScheduledDrip(void) {
   // Current Time
   time_t nowRaw = TimeUtils::getCurrentTimeRaw();
   // Dripping duration
-  int duration = dripParams.getDripTimeSeconds();
+  uint16_t duration = dripParams.getDripTimeSeconds();
   toDisplay = nowRaw + duration;
   dripTicker.once(duration / 60, stopScheduledDrip);
   updateLcd(false);
@@ -341,13 +341,13 @@ void scheduleDrip() {
   // First schedule dripping for today
   time_t dripStart = dripParams.getTodayStartTime();
   // Dripping duration
-  int duration = dripParams.getDripTimeSeconds();
+  uint16_t duration = dripParams.getDripTimeSeconds();
   // Dripping time in seconds. If set to greatet than 0, then the result was #1. See above.
-  int dripTimeSeconds = 0;
+  uint16_t dripTimeSeconds = 0;
   // Time to next dripping in seconds. If set to greater than 0, then the result was #2. See above.
-  int timeToNextDripSeconds = 0;
+  uint32_t timeToNextDripSeconds = 0;
   // Time to next scheduling in minutes. If set to greater that 0, the the result was #3. See above.
-  int rescheduleTimeMinutes = 0;
+  uint16_t rescheduleTimeMinutes = 0;
   // Second dripping of the day
   time_t secondTime = dripStart + dripParams.getDripPeriodSeconds();
   // Rain delay: resume time
@@ -395,13 +395,13 @@ void scheduleDrip() {
   } else if (rescheduleTimeMinutes > 0) {
     // #3 Too late for dripping today, or rain delay. Schedule to re-schedule
     dripTicker.once(rescheduleTimeMinutes + 1, scheduleDrip);
-    sprintf(lcdLine, "Done today");
+    sprintf(lcdLine, dripParams.isRainDelaySet() ? "Rain Delay" : "Done today");
   } else {
     // #2 Schedule to start dripping
     Serial.printf("[DRIPCTRL]: Not time for dripping. %d seconds to next dripping.\n", timeToNextDripSeconds);
     timeToNextDripSeconds = timeToNextDripSeconds < 60 ? 60 : timeToNextDripSeconds;
     dripTicker.once((timeToNextDripSeconds / 60) + 1, startScheduledDrip);
-    sprintf(lcdLine, "Scheduled");
+    sprintf(lcdLine, dripParams.isRainDelaySet() ? "Rain Delay" : "Scheduled");
   }
   updateLcd(false);
 }
@@ -410,16 +410,16 @@ void scheduleDrip() {
 /* MQTT Global Functions                                                              */
 /*------------------------------------------------------------------------------------*/
 // MQTT Subscribe Callback
-void callback(char* topic, byte* payload, unsigned int length) {
+void callback(char* topic, byte* payload, uint8_t length) {
   bool noTimeDisplay = false;
   Serial.printf("[MQTT]: Message arrived [%s]\n", topic);
   Serial.print("[MQTT]: Payload (");
-  for (unsigned int i=0; i < length; i++) {
+  for (uint8_t i=0; i < length; i++) {
     Serial.print((char)payload[i]);
   }
   Serial.println(")");
   char aux[40];
-  int rainDelay;
+  uint8_t rainDelay;
   switch((char) payload[0]) {
     case MQTT_CMD_CONFIG_DRIP: // Configutation in the format of HH:MM:SSMMHH where HH:MM:SS is start time, MM duration, and HH period
       sprintf(aux, "%c%c", payload[9], payload[10]);
@@ -559,8 +559,8 @@ void onPushButtonShortlyPressed() {
     Serial.println("[DRIPCTRL]: Rain was not set. Set rain delay for 24hs");
     dripParams.setRainDelay(24);
     sprintf(lcdLine,"Rain Delay");
+    scheduleDrip();
   }
-  updateLcd(false);
 }
 
 void onPushButtonLongPressed() {
@@ -610,7 +610,7 @@ void setup() {
   ArduinoOTA.onEnd([]() {
     Serial.println("[OTA]: End");
   });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+  ArduinoOTA.onProgress([](uint32_t progress, uint32_t total) {
     Serial.printf("[OTA]: Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
