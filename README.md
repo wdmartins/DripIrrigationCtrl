@@ -48,3 +48,4 @@ This project is aimed to control vegetable garden drip irrigation by setting sta
   * /home-assistant/drip/stopped drip has stopped. No payload.
 
 ## Schemmatic
+![](DripIrrigationControl-V2_schem.jpg)
