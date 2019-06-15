@@ -272,6 +272,7 @@ void configModeCallback (WiFiManager *myWiFiManager) {
 /*------------------------------------------------------------------------------------*/
 /* Other Global Functions                                                             */
 /*------------------------------------------------------------------------------------*/
+void scheduleDrip(bool manualStop);
 void scheduleDrip(void);
 
 void reportFlow() {
@@ -325,6 +326,10 @@ void startScheduledDrip(void) {
 }
 
 void scheduleDrip() {
+  scheduleDrip(false);
+}
+
+void scheduleDrip(bool manualStop) {
   // Scheduler: 
   //           Depending on the parameters, the result of the scheduling could be:
   //           1. Start dripping. Schedule to stop
@@ -364,11 +369,11 @@ void scheduleDrip() {
     timeToNextDripSeconds = dripStart - nowRaw;
     Serial.println("[DRIPCTRL]: Too early for first dripping");
     toDisplay = dripStart;
-  } else if (nowRaw >= dripStart && nowRaw < (dripStart + duration)) {
+  } else if (nowRaw >= dripStart && nowRaw < (dripStart + duration) && !manualStop) {
     // Within first dripping of the day
     dripTimeSeconds = dripStart + duration - nowRaw + 1;  
     toDisplay = dripStart + duration;
-  } else if ( nowRaw >= secondTime && nowRaw < (secondTime + duration)) {
+  } else if ( nowRaw >= secondTime && nowRaw < (secondTime + duration) && !manualStop) {
     // Within second dripping of the day
     dripTimeSeconds = secondTime + duration - nowRaw + 1;
     toDisplay = secondTime + duration;
@@ -481,7 +486,7 @@ void callback(char* topic, byte* payload, uint8_t length) {
       mqttClient.publish(MQTT_DRIP_STOPPED, "");
       reportFlow();
       statusLed.setStatus(StatusLED::Status::stable);
-      scheduleDrip();
+      scheduleDrip(true);
       break;
     case MQTT_CMD_RESET: // Reset system
       sprintf(lcdLine, "Reseting");
@@ -539,7 +544,7 @@ void onPushButtonVeryShortlyPressed() {
     solenoidValve.closeValve();
     mqttClient.publish(MQTT_DRIP_STOPPED, "");
     reportFlow();
-    scheduleDrip();
+    scheduleDrip(true);
     noTimeDisplay = false;
   } else {
     statusLed.setStatus(IRRIGATING);
