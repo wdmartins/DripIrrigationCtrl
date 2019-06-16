@@ -40,6 +40,9 @@ const char MQTT_CMD_RESET_METER = 'a';   //TODO: restart the flow meter
 const char * MQTT_REPORT_FLOW = "/home-assistant/drip/flow";
 const char * MQTT_DRIP_STARTED = "/home-assistant/drip/started";
 const char * MQTT_DRIP_STOPPED = "/home-assistant/drip/stopped";
+const char * MQTT_DRIP_SCHEDULE = "/home-assistant/drip/schedule";
+const char * MQTT_DRIP_RAIN_DELAY_ENDED = "/home-assistant/drip/raindelayended";
+const char * MQTT_DRIP_RAIN_DELAY_SET = "/home-assistant/drip/raindelayset";
 
 // Default Drip Values
 const char *START_IRRIGATION_TIME = "07:00:00"; // HH:MM:SS
@@ -301,6 +304,7 @@ void updateLcd(bool noTimeDisplay) {
   lcd.print(noTimeDisplay ? lcdLine : aux);
   lcd.setCursor(0,1);
   lcd.print(TimeUtils::getTimeStr(now).c_str());
+  mqttClient.publish(MQTT_DRIP_SCHEDULE, noTimeDisplay ? lcdLine : aux);
 }
 
 void stopScheduledDrip(void) {
@@ -409,6 +413,9 @@ void scheduleDrip(bool manualStop) {
     sprintf(lcdLine, dripParams.isRainDelaySet() ? "Rain Delay" : "Scheduled");
   }
   updateLcd(false);
+  if (!dripParams.isRainDelaySet()) {
+    mqttClient.publish(MQTT_DRIP_RAIN_DELAY_ENDED, "");
+  }
 }
 
 /*------------------------------------------------------------------------------------*/
@@ -563,6 +570,7 @@ void onPushButtonShortlyPressed() {
   } else {
     Serial.println("[DRIPCTRL]: Rain was not set. Set rain delay for 24hs");
     dripParams.setRainDelay(24);
+    mqttClient.publish(MQTT_DRIP_RAIN_DELAY_SET, "24");
     sprintf(lcdLine,"Rain Delay");
     scheduleDrip();
   }
