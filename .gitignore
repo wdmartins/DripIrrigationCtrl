@@ -10,3 +10,4 @@ lib/PushButton
 lib/TimeUtils
 lib/StatusLED
 lib/LongTicker
+include/secret.h

@@ -11,6 +11,7 @@
 #include <LongTicker.h>
 #include <PushButton.h>
 #include <LiquidCrystal_I2C.h>
+#include "secret.h"
 
 /*------------------------------------------------------------------------------------*/
 /* Constant Definitions                                                               */
@@ -25,7 +26,6 @@ const StatusLED::Status ANY_ERROR = StatusLED::Status::custom_2;
 
 // MQTT Constants
 const char * MQTT_CLIENT_PREFIX = "DripCtrl-";
-const char * MQTT_BROKER_ADDRESS = "192.168.1.215";
 const char * MQTT_IN_TOPIC = "/home-assistant/drip/request";
 
 // MQTT Commands
@@ -518,7 +518,7 @@ void reconnect() {
     String clientId = MQTT_CLIENT_PREFIX;
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (mqttClient.connect(clientId.c_str())) {
+    if (mqttClient.connect(clientId.c_str(), MQTT_USERNAME, MQTT_PASSWORD)) {
       Serial.println("[MQTT]: Connected");
       // ... and resubscribe
       mqttClient.subscribe(MQTT_IN_TOPIC);
