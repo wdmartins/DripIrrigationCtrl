@@ -52,6 +52,7 @@ const uint8_t RAIN_DELAY_HOURS = 24;                // Minimum 24 hours
 
 // Other Constants
 const uint8_t LCD_DISPLAY_INTERVAL_SECONDS = 60;    // Update the LCD display
+const uint8_t WIFI_CONFIG_WAIT_TIME_MINUTES = 5;    // Time waits for WiFi config before resetting
 
 /*------------------------------------------------------------------------------------*/
 /* GPIO Definitions                                                                   */
@@ -228,6 +229,7 @@ WiFiManager wifiManager;
 
 // Intervals
 LongTicker dripTicker("DRIPTICK");   // Dripping Scheduling
+LongTicker wiFiConfig("WIFICONFIG"); // Wait for WiFi Configuration before resetting system
 Ticker lcdDisplayUpdate; // Update LCD text
 
 // MQTT
@@ -259,6 +261,9 @@ time_t toDisplay;
 /*------------------------------------------------------------------------------------*/
 /* WiFi Manager Global Functions                                                      */
 /*------------------------------------------------------------------------------------*/
+void reset() {
+  ESP.reset();
+}
 // WiFiManager Configuration CallBack
 void configModeCallback (WiFiManager *myWiFiManager) {
   lcd.clear();
@@ -270,6 +275,9 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   Serial.println("[WIFI]: Entered config mode");
   Serial.print("[WIFI]:"); Serial.println(WiFi.softAPIP());
   Serial.printf("[WIFI]: %s", (myWiFiManager->getConfigPortalSSID()).c_str());
+  // Sometimes the WiFiManager incorrectly enters config mode.
+  // Wait a couple of minutes and then reset ESP and try connected to WiFi again
+  wiFiConfig.once(WIFI_CONFIG_WAIT_TIME_MINUTES, reset);
 }
 
 /*------------------------------------------------------------------------------------*/
@@ -600,6 +608,24 @@ void setup() {
   // Push button setup
   pushButton.setup(onPushButtonPressedOnStart, onPushButtonVeryShortlyPressed, onPushButtonShortlyPressed, onPushButtonLongPressed);
   
+  // Start flow metering
+  flowMeter.start();
+
+  // Allow valve to know whether fluid is flowing
+  solenoidValve.setFlowMeter(&flowMeter);
+
+  // Allow flow meter to record potential flowing
+  lcd.setCursor(0,0);
+  lcd.print("   Checking   ");
+  lcd.setCursor(0,1);
+  lcd.print("     Valve    ");
+
+  delay(1000);
+
+  // Initialize the system with the valve closed
+  solenoidValve.run();
+  solenoidValve.closeValve();
+
   // Instantiate and setup WiFiManager
   // wifiManager.resetSettings(); Uncomment to reset wifi settings
   wifiManager.setAPCallback(configModeCallback);
@@ -640,12 +666,6 @@ void setup() {
   mqttClient.setServer(MQTT_BROKER_ADDRESS, 1883);
   mqttClient.setCallback(callback);
 
-  // Start flow metering
-  flowMeter.start();
-
-  // Allow valve to know whether fluid is flowing
-  solenoidValve.setFlowMeter(&flowMeter);
-  
   statusLed.setStatus(StatusLED::Status::stable);
   lcd.clear();
   updateLcd(true);
